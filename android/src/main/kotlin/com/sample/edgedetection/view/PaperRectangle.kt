@@ -116,18 +116,18 @@ class PaperRectangle : View {
         return listOf(tl, tr, br, bl)
     }
 
-    override fun onDraw(canvas: Canvas?) {
+    override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
 
         rectPaint.color = Color.WHITE
         rectPaint.strokeWidth = 6F
         rectPaint.style = Paint.Style.STROKE
-        canvas?.drawPath(path, rectPaint)
+        canvas.drawPath(path, rectPaint)
 
         rectPaint.color = Color.argb(128, 255, 255, 255)
         rectPaint.strokeWidth = 0F
         rectPaint.style = Paint.Style.FILL
-        canvas?.drawPath(path, rectPaint)
+        canvas.drawPath(path, rectPaint)
 
         if (cropMode) {
             canvas?.drawCircle(tl.x.toFloat(), tl.y.toFloat(), 20F, circlePaint)

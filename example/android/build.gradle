@@ -1,12 +1,12 @@
 buildscript {
-    ext.kotlin_version = '1.8.0'
+    ext.kotlin_version = '1.8.10'
     repositories {
         google()
         mavenCentral()
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:7.4.2'
+        classpath 'com.android.tools.build:gradle:8.1.0'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
 }
@@ -15,6 +15,13 @@ allprojects {
     repositories {
         google()
         mavenCentral()
+    }
+    
+    // Add namespace to plugins that don't have it
+    afterEvaluate {
+        if (project.hasProperty('android') && !project.android.hasProperty('namespace')) {
+            project.android.namespace = project.group
+        }
     }
 }
 

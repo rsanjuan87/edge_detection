@@ -1,0 +1,10 @@
+apply plugin: 'com.android.library'
+
+android {
+    namespace 'carnegietechnologies.gallery_saver'
+    compileSdkVersion 33
+    
+    defaultConfig {
+        minSdkVersion 16
+    }
+}
