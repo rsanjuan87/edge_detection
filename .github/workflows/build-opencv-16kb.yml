@@ -1,0 +1,73 @@
+name: Build OpenCV with 16KB Support
+
+on:
+  workflow_dispatch:  # Manual trigger
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Set up environment
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential cmake git wget python3 unzip
+    
+    - name: Download Android NDK r26b
+      run: |
+        wget -q https://dl.google.com/android/repository/android-ndk-r26b-linux.zip
+        unzip -q android-ndk-r26b-linux.zip
+        echo "ANDROID_NDK=$PWD/android-ndk-r26b" >> $GITHUB_ENV
+    
+    - name: Download OpenCV 4.10.0
+      run: |
+        wget -q https://github.com/opencv/opencv/archive/refs/tags/4.10.0.zip
+        unzip -q 4.10.0.zip
+    
+    - name: Configure OpenCV with 16KB page size
+      run: |
+        cd opencv-4.10.0
+        mkdir -p build-arm64
+        cd build-arm64
+        
+        export LDFLAGS="-Wl,-z,max-page-size=16384"
+        export CFLAGS="-Wl,-z,max-page-size=16384"
+        export CXXFLAGS="-Wl,-z,max-page-size=16384"
+        
+        cmake -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK/build/cmake/android.toolchain.cmake \
+          -DANDROID_ABI=arm64-v8a \
+          -DANDROID_PLATFORM=android-24 \
+          -DANDROID_STL=c++_static \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DBUILD_SHARED_LIBS=ON \
+          -DBUILD_JAVA=ON \
+          -DBUILD_ANDROID_EXAMPLES=OFF \
+          -DBUILD_DOCS=OFF \
+          -DBUILD_PERF_TESTS=OFF \
+          -DBUILD_TESTS=OFF \
+          -DCMAKE_CXX_FLAGS="-Wl,-z,max-page-size=16384" \
+          -DCMAKE_C_FLAGS="-Wl,-z,max-page-size=16384" \
+          -DCMAKE_SHARED_LINKER_FLAGS="-Wl,-z,max-page-size=16384" \
+          ..
+    
+    - name: Build OpenCV
+      run: |
+        cd opencv-4.10.0/build-arm64
+        make -j$(nproc)
+    
+    - name: Package libraries
+      run: |
+        mkdir -p opencv-output/arm64-v8a
+        cp opencv-4.10.0/build-arm64/lib/libopencv_java4.so opencv-output/arm64-v8a/
+        cd opencv-output
+        zip -r opencv-16kb-arm64.zip arm64-v8a/
+    
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: opencv-16kb-binaries
+        path: opencv-output/opencv-16kb-arm64.zip
+        retention-days: 30
